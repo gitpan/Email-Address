@@ -1,10 +1,12 @@
 package Email::Address;
-# $Id: Address.pm,v 1.1 2004/05/27 03:11:42 cwest Exp $
+# $Id: Address.pm,v 1.2 2004/06/02 16:34:19 cwest Exp $
 use strict;
 
 use vars qw[$VERSION $COMMENT_NEST_LEVEL $STRINGIFY
-            %PARSE_CACHE %FORMAT_CACHE %NAME_CACHE];
-$VERSION            = (qw$Revision: 1.1 $)[1];
+            %PARSE_CACHE %FORMAT_CACHE %NAME_CACHE
+            $addr_spec $angle_addr $name_addr $mailbox];
+
+$VERSION            = (qw$Revision: 1.2 $)[1];
 $COMMENT_NEST_LEVEL = 5;
 $STRINGIFY          = 'format';
 
@@ -28,30 +30,6 @@ addresses in strings and returns a list of C<Email::Address> objects
 found. Alternatley you may construct objects manually. The goal
 of this software is to be correct, very very fast, and API compatible
 with the MailTools version. Did I mention fast?
-
-=head2 Class Methods
-
-=over 4
-
-=item parse
-
-  my @addrs = Email::Address->parse(
-      q[me@local, Casey <me@local>, "Casey" <me@local> (West)]
-  );
-
-This method returns a list of C<Email::Address> objects it finds
-in the input string.
-
-The specification for an email address allows for infinitley
-nestable comments. That's nice in theory, but a little over done.
-By default this module allows for five (C<5>) levels of nested
-comments. If you think you need more, modify the
-C<$Email::Address::COMMENT_NEST_LEVEL> package variable to allow
-more.
-
-  $Email::Address::COMMENT_NEST_LEVEL = 10; # I'm deep
-
-The reason for this hardly limiting limitation is simple: efficiency.
 
 =cut
 
@@ -87,13 +65,78 @@ my $dcontent       = qr/$dtext|$quoted_pair/;
 my $domain_literal = qr/\s*\[(?:\s*$dcontent+)*\s*\]\s*/;
 my $domain         = qr/$dot_atom|$domain_literal/;
 
-my $addr_spec      = qr/$local_part\@$domain/;
-
-my $angle_addr     = qr/\s*<$addr_spec>\s*/;
 my $display_name   = $phrase;
-my $name_addr      = qr/$display_name?$angle_addr/;
 
-my $mailbox        = qr/(?:$name_addr|$addr_spec)$comment*/;
+=head2 Package Variables
+
+Several regular expressions used in this package are useful to others.
+For convenience, these variables are declared as package variables that
+you may access from your program.
+
+These regular expressions conform to the rules specified in RFC 2822.
+
+You can access these variables using the full namespace. If you want
+short names, define them yourself.
+
+  my $addr_spec = $Email::Address::addr_spec;
+
+=over 4
+
+=item $Email::Address::addr_spec
+
+This regular expression defined what an email address is allowed to
+look like.
+
+=item $Email::Address::angle_addr
+
+This regular expression defines an C<$addr_spec> wrapped in angle
+brackets.
+
+=item $Email::Address::name_addr
+
+This regular expression defines what an email address can look like
+with an optional preceeding display name, also known as the C<phrase>.
+
+=item $Email::Address::mailbox
+
+This is the complete regular expression defining an RFC 2822 emial
+address with an optional preceeding display name and optional
+following comment.
+
+=back
+
+=cut
+
+$addr_spec  = qr/$local_part\@$domain/;
+$angle_addr = qr/\s*<$addr_spec>\s*/;
+$name_addr  = qr/$display_name?$angle_addr/;
+$mailbox    = qr/(?:$name_addr|$addr_spec)$comment*/;
+
+=head2 Class Methods
+
+=over 4
+
+=item parse
+
+  my @addrs = Email::Address->parse(
+      q[me@local, Casey <me@local>, "Casey" <me@local> (West)]
+  );
+
+This method returns a list of C<Email::Address> objects it finds
+in the input string.
+
+The specification for an email address allows for infinitley
+nestable comments. That's nice in theory, but a little over done.
+By default this module allows for five (C<5>) levels of nested
+comments. If you think you need more, modify the
+C<$Email::Address::COMMENT_NEST_LEVEL> package variable to allow
+more.
+
+  $Email::Address::COMMENT_NEST_LEVEL = 10; # I'm deep
+
+The reason for this hardly limiting limitation is simple: efficiency.
+
+=cut
 
 sub parse {
     return @{$PARSE_CACHE{$_[1]}} if exists $PARSE_CACHE{$_[1]};
@@ -101,6 +144,7 @@ sub parse {
     my (@mailboxes) = ($line =~ /$mailbox/go);
     my @addrs;
     foreach (@mailboxes) {
+      my $original = $_;
       my ($user, $host, $com);
       ($user, $host) = ($1, $2) if s/<($local_part)\@($domain)>//o;
       if (! defined($user) || ! defined($host)) {
@@ -114,7 +158,7 @@ sub parse {
         s/^\s+//;
         s/\s+$//;
       }
-      push @addrs, $class->new($phrase, "$user\@$host", $com);
+      push @addrs, $class->new($phrase, "$user\@$host", $com, $original);
     }
     $PARSE_CACHE{$line} = [@addrs];
     @addrs;
@@ -128,15 +172,18 @@ sub parse {
   my $address = Email::Address->new('Casey West', 'casey@local');
   my $address = Email::Address->new(undef, 'casey@local', '(Casey)');
 
-Constructs and returns a new C<Email::Address> object. Takes three
-positional arguments: phrase, email, and comment.
+Constructs and returns a new C<Email::Address> object. Takes four
+positional arguments: phrase, email, and comment, and original string.
+
+The original string should only really be set using C<parse>.
 
 =cut
 
-sub _PHRASE  () { 0 }
-sub _ADDRESS () { 1 }
-sub _COMMENT () { 2 }
-sub new { bless [@_[1..3]], $_[0] }
+sub _PHRASE   () { 0 }
+sub _ADDRESS  () { 1 }
+sub _COMMENT  () { 2 }
+sub _ORIGINAL () { 3 }
+sub new { bless [@_[1..4]], $_[0] }
 
 =pod
 
@@ -188,6 +235,13 @@ Accessor and mutator for the address portion of an address.
 
 Accessor and mutator for the comment portion of an address.
 
+=item original
+
+  my $orig = $address->original;
+
+Accessor for the original address found when parsing, or passed
+to C<new>.
+
 =item host
 
   my $host = $address->host;
@@ -202,11 +256,12 @@ Accessor for the user portion of an address's address.
 
 =cut
 
-sub phrase  { $_[1] ? $_[0]->[_PHRASE]  = $_[1] : $_[0]->[_PHRASE]  }
-sub address { $_[1] ? $_[0]->[_ADDRESS] = $_[1] : $_[0]->[_ADDRESS] }
-sub comment { $_[1] ? $_[0]->[_COMMENT] = $_[1] : $_[0]->[_COMMENT] }
-sub host    { ($_[0]->[_ADDRESS] =~ /\@($domain)/o)[0]              }
-sub user    { ($_[0]->[_ADDRESS] =~ /($local_part)\@/o)[0]          }
+sub phrase   { $_[1] ? $_[0]->[_PHRASE]   = $_[1] : $_[0]->[_PHRASE]   }
+sub address  { $_[1] ? $_[0]->[_ADDRESS]  = $_[1] : $_[0]->[_ADDRESS]  }
+sub comment  { $_[1] ? $_[0]->[_COMMENT]  = $_[1] : $_[0]->[_COMMENT]  }
+sub original { $_[1] ? $_[0]->[_ORIGINAL] = $_[1] : $_[0]->[_ORIGINAL] }
+sub host     { ($_[0]->[_ADDRESS] =~ /\@($domain)/o)[0]                }
+sub user     { ($_[0]->[_ADDRESS] =~ /($local_part)\@/o)[0]            }
 
 
 =pod
