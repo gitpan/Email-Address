@@ -1,12 +1,12 @@
 package Email::Address;
-# $Id: Address.pm,v 1.2 2004/06/02 16:34:19 cwest Exp $
+# $Id: Address.pm,v 1.3 2004/08/16 21:37:38 cwest Exp $
 use strict;
 
 use vars qw[$VERSION $COMMENT_NEST_LEVEL $STRINGIFY
             %PARSE_CACHE %FORMAT_CACHE %NAME_CACHE
             $addr_spec $angle_addr $name_addr $mailbox];
 
-$VERSION            = (qw$Revision: 1.2 $)[1];
+$VERSION            = (qw$Revision: 1.3 $)[1];
 $COMMENT_NEST_LEVEL = 5;
 $STRINGIFY          = 'format';
 
@@ -314,7 +314,7 @@ sub name {
         $name =~ s/($quoted_pair)/substr $1, -1/goe;
     } elsif ( $name = $self->[_COMMENT] ) {
         $name =~ s/^\(//;
-        $name =~ s/\($//;
+        $name =~ s/\)$//;
         $name =~ s/($quoted_pair)/substr $1, -1/goe;
         $name =~ s/$comment/ /go;
     } else {
