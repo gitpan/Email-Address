@@ -1,12 +1,12 @@
 package Email::Address;
-# $Id: Address.pm,v 1.7 2004/10/12 12:04:52 cwest Exp $
+# $Id: Address.pm,v 1.8 2004/10/22 16:39:14 cwest Exp $
 use strict;
 
 use vars qw[$VERSION $COMMENT_NEST_LEVEL $STRINGIFY
             %PARSE_CACHE %FORMAT_CACHE %NAME_CACHE
             $addr_spec $angle_addr $name_addr $mailbox];
 
-$VERSION              = (qw$Revision: 1.7 $)[1];
+$VERSION              = '1.80';
 $COMMENT_NEST_LEVEL ||= 2;
 $STRINGIFY          ||= 'format';
 
@@ -39,7 +39,7 @@ my $text           = qr/[^\x0A\x0D]/;
 
 my $quoted_pair    = qr/\\$text/;
 
-my $ctext          = qr/[^()\\]/;
+my $ctext          = qr/(?>[^()\\]+)/;
 my ($ccontent, $comment) = ('')x2;
 for (1 .. $COMMENT_NEST_LEVEL) {
    $ccontent       = qr/$ctext|$quoted_pair|$comment/;
