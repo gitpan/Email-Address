@@ -1,14 +1,14 @@
 package Email::Address;
-# $Id: Address.pm,v 1.5 2004/10/05 18:09:56 cwest Exp $
+# $Id: Address.pm,v 1.6 2004/10/05 18:21:50 cwest Exp $
 use strict;
 
 use vars qw[$VERSION $COMMENT_NEST_LEVEL $STRINGIFY
             %PARSE_CACHE %FORMAT_CACHE %NAME_CACHE
             $addr_spec $angle_addr $name_addr $mailbox];
 
-$VERSION            = (qw$Revision: 1.5 $)[1];
-$COMMENT_NEST_LEVEL = 5;
-$STRINGIFY          = 'format';
+$VERSION              = (qw$Revision: 1.6 $)[1];
+$COMMENT_NEST_LEVEL ||= 5;
+$STRINGIFY          ||= 'format';
 
 =head1 NAME
 

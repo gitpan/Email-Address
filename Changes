@@ -1,4 +1,8 @@
-1.4    2004-10-05
+1.6    2004-10-05
+
+  - Only define package variables if they haven't already been defined.
+
+1.5    2004-10-05
 
   - Implemented the remainder of the spec for CFWS. This was intentionally
     left out of previous versions because it increases the size of the regex
