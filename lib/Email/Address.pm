@@ -1,12 +1,12 @@
 package Email::Address;
-# $Id: Address.pm,v 1.3 2004/08/16 21:37:38 cwest Exp $
+# $Id: Address.pm,v 1.5 2004/10/05 18:09:56 cwest Exp $
 use strict;
 
 use vars qw[$VERSION $COMMENT_NEST_LEVEL $STRINGIFY
             %PARSE_CACHE %FORMAT_CACHE %NAME_CACHE
             $addr_spec $angle_addr $name_addr $mailbox];
 
-$VERSION            = (qw$Revision: 1.3 $)[1];
+$VERSION            = (qw$Revision: 1.5 $)[1];
 $COMMENT_NEST_LEVEL = 5;
 $STRINGIFY          = 'format';
 
@@ -28,8 +28,7 @@ Email::Address - RFC 2822 Address Parsing and Creation
 This class implements a complete RFC 2822 parser that locates email
 addresses in strings and returns a list of C<Email::Address> objects
 found. Alternatley you may construct objects manually. The goal
-of this software is to be correct, very very fast, and API compatible
-with the MailTools version. Did I mention fast?
+of this software is to be correct, and very very fast.
 
 =cut
 
@@ -38,16 +37,7 @@ my $special        = q[()<>\\[\\]:;@\\,."];
 
 my $text           = qr/[^\x0A\x0D]/;
 
-my $atext          = qq/[^$CTL$special\\s]/;
-my $atom           = qr/\s*$atext+\s*/;
-my $dot_atom_text  = qr/$atext+(?:\.$atext+)*/;
-my $dot_atom       = qr/\s*$dot_atom_text\s*/;
-
 my $quoted_pair    = qr/\\$text/;
-
-my $qtext          = qr/[^\\"]/;
-my $qcontent       = qr/$qtext|$quoted_pair/;
-my $quoted_string  = qr/\s*"$qcontent+"\s*/;
 
 my $ctext          = qr/[^()\\]/;
 my ($ccontent, $comment) = ('')x2;
@@ -55,6 +45,16 @@ for (1 .. $COMMENT_NEST_LEVEL) {
    $ccontent       = qr/$ctext|$quoted_pair|$comment/;
    $comment        = qr/\s*\((?:\s*$ccontent+)*\s*\)\s*/;
 }
+my $cfws           = qr/$comment+|\s+/;
+
+my $atext          = qq/[^$CTL$special\\s]/;
+my $atom           = qr/$cfws*$atext+$cfws*/;
+my $dot_atom_text  = qr/$atext+(?:\.$atext+)*/;
+my $dot_atom       = qr/$cfws*$dot_atom_text$cfws*/;
+
+my $qtext          = qr/[^\\"]/;
+my $qcontent       = qr/$qtext|$quoted_pair/;
+my $quoted_string  = qr/$cfws*"$qcontent+"$cfws*/;
 
 my $word           = qr/$atom|$quoted_string/;
 my $phrase         = qr/$word+/;
@@ -62,7 +62,7 @@ my $phrase         = qr/$word+/;
 my $local_part     = qr/$dot_atom|$quoted_string/;
 my $dtext          = qr/[^\[\]\\]/;
 my $dcontent       = qr/$dtext|$quoted_pair/;
-my $domain_literal = qr/\s*\[(?:\s*$dcontent+)*\s*\]\s*/;
+my $domain_literal = qr/$cfws*\[(?:\s*$dcontent+)*\s*\]$cfws*/;
 my $domain         = qr/$dot_atom|$domain_literal/;
 
 my $display_name   = $phrase;
@@ -108,7 +108,7 @@ following comment.
 =cut
 
 $addr_spec  = qr/$local_part\@$domain/;
-$angle_addr = qr/\s*<$addr_spec>\s*/;
+$angle_addr = qr/$cfws*<$addr_spec>$cfws*/;
 $name_addr  = qr/$display_name?$angle_addr/;
 $mailbox    = qr/(?:$name_addr|$addr_spec)$comment*/;
 
@@ -145,20 +145,27 @@ sub parse {
     my @addrs;
     foreach (@mailboxes) {
       my $original = $_;
+
+      my @comments = /($comment)/go;
+      s/$comment//go if @comments;
+
       my ($user, $host, $com);
       ($user, $host) = ($1, $2) if s/<($local_part)\@($domain)>//o;
       if (! defined($user) || ! defined($host)) {
           s/($local_part)\@($domain)//o;
           ($user, $host) = ($1, $2);
       }
-      $com = $1 if s/($comment)//o;
+
       my ($phrase)       = /($display_name)/o;
-      for ( $phrase, $host, $user, $com ) {
+
+      for ( $phrase, $host, $user, @comments ) {
         next unless defined $_;
         s/^\s+//;
         s/\s+$//;
       }
-      push @addrs, $class->new($phrase, "$user\@$host", $com, $original);
+
+      my $comment = join ' ', @comments;
+      push @addrs, $class->new($phrase, "$user\@$host", $comment, $original);
     }
     $PARSE_CACHE{$line} = [@addrs];
     @addrs;
@@ -371,16 +378,16 @@ get results like this.
 
   $ perl -Ilib bench/ea-vs-ma.pl bench/corpus.txt 5 
                  s/iter  Mail::Address Email::Address
-  Mail::Address    2.44             --           -64%
-  Email::Address  0.884           176%             --
+  Mail::Address    1.59             --           -31%
+  Email::Address   1.10            45%             --
   $ perl -Ilib bench/ea-vs-ma.pl bench/corpus.txt 25
                  s/iter  Mail::Address Email::Address
-  Mail::Address    2.45             --           -73%
-  Email::Address  0.652           276%             --
+  Mail::Address    1.58             --           -60%
+  Email::Address  0.630           151%             --
   $ perl -Ilib bench/ea-vs-ma.pl bench/corpus.txt 50
                  s/iter  Mail::Address Email::Address
-  Mail::Address    2.43             --           -76%
-  Email::Address  0.585           316%             --
+  Mail::Address    1.58             --           -65%
+  Email::Address  0.558           182%             --
 
 =head1 SEE ALSO
 

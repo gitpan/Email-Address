@@ -1,3 +1,11 @@
+1.4    2004-10-05
+
+  - Implemented the remainder of the spec for CFWS. This was intentionally
+    left out of previous versions because it increases the size of the regex
+    ten fold. I was surprised to learn that the slowdown was only 33%,
+    leaving Email-Address faster than its competition by a factor of two in
+    the benchmarks I've created (which makes them subjective, I suppose).
+
 1.3    2004-08-15
 
   - name() was incorrectly fixing up a comment.

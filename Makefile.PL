@@ -5,7 +5,7 @@ WriteMakefile (
                ABSTRACT      => "RFC 2822 Address Parsing",
                NAME          => 'Email::Address',
                PREREQ_PM     => {
-                                 'Test::More'        => '',
+                                 'Test::More' => '0.47',
                                 },
                VERSION_FROM  => 'lib/Email/Address.pm',
               );

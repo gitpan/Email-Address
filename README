@@ -13,8 +13,7 @@ DESCRIPTION
     This class implements a complete RFC 2822 parser that locates email
     addresses in strings and returns a list of "Email::Address" objects
     found. Alternatley you may construct objects manually. The goal of this
-    software is to be correct, very very fast, and API compatible with the
-    MailTools version. Did I mention fast?
+    software is to be correct, and very very fast.
 
   Package Variables
     Several regular expressions used in this package are useful to others.
@@ -164,16 +163,16 @@ DESCRIPTION
 
       $ perl -Ilib bench/ea-vs-ma.pl bench/corpus.txt 5 
                      s/iter  Mail::Address Email::Address
-      Mail::Address    2.44             --           -64%
-      Email::Address  0.884           176%             --
+      Mail::Address    1.59             --           -31%
+      Email::Address   1.10            45%             --
       $ perl -Ilib bench/ea-vs-ma.pl bench/corpus.txt 25
                      s/iter  Mail::Address Email::Address
-      Mail::Address    2.45             --           -73%
-      Email::Address  0.652           276%             --
+      Mail::Address    1.58             --           -60%
+      Email::Address  0.630           151%             --
       $ perl -Ilib bench/ea-vs-ma.pl bench/corpus.txt 50
                      s/iter  Mail::Address Email::Address
-      Mail::Address    2.43             --           -76%
-      Email::Address  0.585           316%             --
+      Mail::Address    1.58             --           -65%
+      Email::Address  0.558           182%             --
 
 SEE ALSO
     Email::Simple, perl.
