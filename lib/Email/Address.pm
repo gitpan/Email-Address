@@ -1,13 +1,13 @@
 package Email::Address;
-# $Id: Address.pm,v 1.6 2004/10/05 18:21:50 cwest Exp $
+# $Id: Address.pm,v 1.7 2004/10/12 12:04:52 cwest Exp $
 use strict;
 
 use vars qw[$VERSION $COMMENT_NEST_LEVEL $STRINGIFY
             %PARSE_CACHE %FORMAT_CACHE %NAME_CACHE
             $addr_spec $angle_addr $name_addr $mailbox];
 
-$VERSION              = (qw$Revision: 1.6 $)[1];
-$COMMENT_NEST_LEVEL ||= 5;
+$VERSION              = (qw$Revision: 1.7 $)[1];
+$COMMENT_NEST_LEVEL ||= 2;
 $STRINGIFY          ||= 'format';
 
 =head1 NAME
@@ -127,7 +127,7 @@ in the input string.
 
 The specification for an email address allows for infinitley
 nestable comments. That's nice in theory, but a little over done.
-By default this module allows for five (C<5>) levels of nested
+By default this module allows for two (C<2>) levels of nested
 comments. If you think you need more, modify the
 C<$Email::Address::COMMENT_NEST_LEVEL> package variable to allow
 more.
@@ -164,8 +164,8 @@ sub parse {
         s/\s+$//;
       }
 
-      my $comment = join ' ', @comments;
-      push @addrs, $class->new($phrase, "$user\@$host", $comment, $original);
+      my $new_comment = join ' ', @comments;
+      push @addrs, $class->new($phrase, "$user\@$host", $new_comment, $original);
     }
     $PARSE_CACHE{$line} = [@addrs];
     @addrs;

@@ -1,6 +1,7 @@
 use Test::More qw[no_plan];
-# $Id: tests.t,v 1.3 2004/06/02 16:34:19 cwest Exp $
+# $Id: tests.t,v 1.4 2004/10/12 12:04:52 cwest Exp $
 use strict;
+$^W = 1;
 
 use_ok 'Email::Address';
 

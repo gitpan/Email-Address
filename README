@@ -56,8 +56,8 @@ DESCRIPTION
 
         The specification for an email address allows for infinitley
         nestable comments. That's nice in theory, but a little over done. By
-        default this module allows for five (5) levels of nested comments.
-        If you think you need more, modify the
+        default this module allows for two (2) levels of nested comments. If
+        you think you need more, modify the
         $Email::Address::COMMENT_NEST_LEVEL package variable to allow more.
 
           $Email::Address::COMMENT_NEST_LEVEL = 10; # I'm deep

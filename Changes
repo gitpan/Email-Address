@@ -1,3 +1,9 @@
+1.7    2004-10-12
+
+  - $comment was initialized twice, oops.
+  - Lowered the default nested comment level from five to two, cut
+    regex in half.
+
 1.6    2004-10-05
 
   - Only define package variables if they haven't already been defined.
