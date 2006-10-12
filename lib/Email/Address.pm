@@ -7,7 +7,7 @@ use vars qw[$VERSION $COMMENT_NEST_LEVEL $STRINGIFY
 
 my $NOCACHE;
 
-$VERSION              = '1.870';
+$VERSION              = '1.861';
 $COMMENT_NEST_LEVEL ||= 2;
 $STRINGIFY          ||= 'format';
 
@@ -158,6 +158,7 @@ sub __cache_parse {
 
 sub parse {
     my ($class, $line) = @_;
+    return unless $line;
 
     if (my @cached = $class->__get_cached_parse($line)) {
         return @cached;
@@ -385,21 +386,24 @@ sub name {
 
   print "I have your email address, $address.";
 
-Objects stringify to C<format> by default.   This is also exposed via the
-C<as_string> method.
+Objects stringify to C<format> by default. It's possible that you don't
+like that idea. Okay, then, you can change it by modifying
+C<$Email:Address::STRINGIFY>. Please consider modifying this package
+variable using C<local>. You might step on someone else's toes if you
+don't.
+
+  {
+    local $Email::Address::STRINGIFY = 'address';
+    print "I have your address, $address.";
+    #   geeknest.com
+  }
+  print "I have your address, $address.";
+  #   "Casey West" <casey@geeknest.com>
 
 =cut
 
-sub as_string {
-  no strict 'refs';
-
-  warn 'altering $Email::Address::STRINGIFY is deprecated; subclass instead'
-    if $STRINGIFY ne 'format';
-
-  goto &{$STRINGIFY};
-}
-
-use overload '""' => 'as_string';
+#sub as_string { no strict 'refs'; goto &{$STRINGIFY} };
+use overload '""' => sub { no strict 'refs'; goto &{$STRINGIFY} };
 
 =pod
 
@@ -436,7 +440,7 @@ certain known characteristics.
 
 This module is maintained by the Perl Email Project
 
-  L<http://emailproject.perl.org/wiki/Email::Address>
+L<http://emailproject.perl.org/wiki/Email::Address>
 
 =head1 SEE ALSO
 
