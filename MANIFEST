@@ -5,8 +5,10 @@ Changes
 lib/Email/Address.pm
 Makefile.PL
 MANIFEST			This list of files
-META.yml
 README
+t/cache-cow.t
 t/pod.t
 t/pod-coverage.t
 t/tests.t
+LICENSE
+META.yml                                 Module meta-data (added by MakeMaker)

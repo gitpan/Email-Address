@@ -9,7 +9,7 @@ use vars qw[$VERSION $COMMENT_NEST_LEVEL $STRINGIFY
 
 my $NOCACHE;
 
-$VERSION              = '1.881';
+$VERSION              = '1.882';
 $COMMENT_NEST_LEVEL ||= 2;
 $STRINGIFY          ||= 'format';
 
@@ -28,21 +28,21 @@ Email::Address - RFC 2822 Address Parsing and Creation
 
 =head1 VERSION
 
-version 1.881
+version 1.882
 
- $Id: /my/pep/Email-Address/trunk/lib/Email/Address.pm 27852 2006-11-11T16:00:02.117514Z rjbs  $
+ $Id: /my/pep/Email-Address/trunk/lib/Email/Address.pm 28365 2006-11-22T01:23:26.913166Z rjbs  $
 
 =head1 DESCRIPTION
 
-This class implements a complete RFC 2822 parser that locates email
-addresses in strings and returns a list of C<Email::Address> objects
-found. Alternatley you may construct objects manually. The goal
-of this software is to be correct, and very very fast.
+This class implements a regex-based RFC 2822 parser that locates email
+addresses in strings and returns a list of C<Email::Address> objects found.
+Alternatley you may construct objects manually. The goal of this software is to
+be correct, and very very fast.
 
 =cut
 
-my $CTL            = q[\x00-\x1F\x7F];
-my $special        = q[()<>\\[\\]:;@\\,."];
+my $CTL            = q{\x00-\x1F\x7F};
+my $special        = q{()<>\\[\\]:;@\\,."};
 
 my $text           = qr/[^\x0A\x0D]/;
 
@@ -51,8 +51,8 @@ my $quoted_pair    = qr/\\$text/;
 my $ctext          = qr/(?>[^()\\]+)/;
 my ($ccontent, $comment) = (q{})x2;
 for (1 .. $COMMENT_NEST_LEVEL) {
-   $ccontent       = qr/$ctext|$quoted_pair|$comment/;
-   $comment        = qr/\s*\((?:\s*$ccontent)*\s*\)\s*/;
+  $ccontent = qr/$ctext|$quoted_pair|$comment/;
+  $comment  = qr/\s*\((?:\s*$ccontent)*\s*\)\s*/;
 }
 my $cfws           = qr/$comment|\s+/;
 
@@ -137,6 +137,12 @@ $angle_addr = qr/$cfws*<$addr_spec>$cfws*/;
 $name_addr  = qr/$display_name?$angle_addr/;
 $mailbox    = qr/(?:$name_addr|$addr_spec)$comment*/;
 
+sub _PHRASE   () { 0 }
+sub _ADDRESS  () { 1 }
+sub _COMMENT  () { 2 }
+sub _ORIGINAL () { 3 }
+sub _IN_CACHE () { 4 }
+
 =head2 Class Methods
 
 =over 4
@@ -144,7 +150,7 @@ $mailbox    = qr/(?:$name_addr|$addr_spec)$comment*/;
 =item parse
 
   my @addrs = Email::Address->parse(
-      q[me@local, Casey <me@local>, "Casey" <me@local> (West)]
+    q[me@local, Casey <me@local>, "Casey" <me@local> (West)]
   );
 
 This method returns a list of C<Email::Address> objects it finds
@@ -212,7 +218,9 @@ sub parse {
       }
 
       my $new_comment = join q{ }, @comments;
-      push @addrs, $class->new($phrase, "$user\@$host", $new_comment, $original);
+      push @addrs,
+        $class->new($phrase, "$user\@$host", $new_comment, $original);
+      $addrs[-1]->[_IN_CACHE] = [ \$line, $#addrs ]
     }
 
     $class->__cache_parse($line, \@addrs);
@@ -234,10 +242,6 @@ The original string should only really be set using C<parse>.
 
 =cut
 
-sub _PHRASE   () { 0 }
-sub _ADDRESS  () { 1 }
-sub _COMMENT  () { 2 }
-sub _ORIGINAL () { 3 }
 sub new { bless [@_[1..4]], $_[0] }
 
 =pod
@@ -331,13 +335,35 @@ Accessor for the user portion of an address's address.
 
 =cut
 
-sub phrase   { $_[1] ? $_[0]->[_PHRASE]   = $_[1] : $_[0]->[_PHRASE]   }
-sub address  { $_[1] ? $_[0]->[_ADDRESS]  = $_[1] : $_[0]->[_ADDRESS]  }
-sub comment  { $_[1] ? $_[0]->[_COMMENT]  = $_[1] : $_[0]->[_COMMENT]  }
-sub original { $_[1] ? $_[0]->[_ORIGINAL] = $_[1] : $_[0]->[_ORIGINAL] }
-sub host     { ($_[0]->[_ADDRESS] =~ /\@($domain)/o)[0]                }
-sub user     { ($_[0]->[_ADDRESS] =~ /($local_part)\@/o)[0]            }
+BEGIN {
+  my %_INDEX = (
+    phrase   => _PHRASE,
+    address  => _ADDRESS,
+    comment  => _COMMENT,
+    original => _ORIGINAL,
+  );
 
+  for my $method (keys %_INDEX) {
+    no strict 'refs';
+    my $index = $_INDEX{ $method };
+    *$method = sub {
+      if ($_[1]) {
+        if ($_[0][_IN_CACHE]) {
+          my $replicant = bless [ @{$_[0]} ] => ref $_[0];
+          $PARSE_CACHE{ ${ $_[0][_IN_CACHE][0] } }[ $_[0][_IN_CACHE][1] ] 
+            = $replicant;
+          $_[0][_IN_CACHE] = undef;
+        }
+        $_[0]->[ $index ] = $_[1];
+      } else {
+        $_[0]->[ $index ];
+      }
+    };
+  }
+}
+
+sub host { ($_[0]->[_ADDRESS] =~ /\@($domain)/o)[0]     }
+sub user { ($_[0]->[_ADDRESS] =~ /($local_part)\@/o)[0] }
 
 =pod
 
@@ -447,24 +473,26 @@ __END__
 
 =head2 Did I Mention Fast?
 
-On my 877Mhz 12" Apple Powerbook I can run the distributed benchmarks and
-get results like this.
+On his 1.8GHz Apple MacBook, rjbs gets these results:
 
   $ perl -Ilib bench/ea-vs-ma.pl bench/corpus.txt 5 
-                 s/iter  Mail::Address Email::Address
-  Mail::Address    1.59             --           -31%
-  Email::Address   1.10            45%             --
+                   Rate  Mail::Address Email::Address
+  Mail::Address  2.59/s             --           -44%
+  Email::Address 4.59/s            77%             --
+
   $ perl -Ilib bench/ea-vs-ma.pl bench/corpus.txt 25
-                 s/iter  Mail::Address Email::Address
-  Mail::Address    1.58             --           -60%
-  Email::Address  0.630           151%             --
+                   Rate  Mail::Address Email::Address
+  Mail::Address  2.58/s             --           -67%
+  Email::Address 7.84/s           204%             --
+
   $ perl -Ilib bench/ea-vs-ma.pl bench/corpus.txt 50
-                 s/iter  Mail::Address Email::Address
-  Mail::Address    1.58             --           -65%
-  Email::Address  0.558           182%             --
+                   Rate  Mail::Address Email::Address
+  Mail::Address  2.57/s             --           -70%
+  Email::Address 8.53/s           232%             --
 
 ...unfortunately, a known bug causes a loss of speed the string to parse has
-certain known characteristics.
+certain known characteristics, and disabling cache to avoid caching problems
+will also degrade performance.
 
 =head1 PERL EMAIL PROJECT
 
