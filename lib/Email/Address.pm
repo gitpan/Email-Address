@@ -9,7 +9,7 @@ use vars qw[$VERSION $COMMENT_NEST_LEVEL $STRINGIFY
 
 my $NOCACHE;
 
-$VERSION              = '1.884';
+$VERSION              = '1.885';
 $COMMENT_NEST_LEVEL ||= 2;
 $STRINGIFY          ||= 'format';
 
@@ -28,9 +28,9 @@ Email::Address - RFC 2822 Address Parsing and Creation
 
 =head1 VERSION
 
-version 1.884
+version 1.885
 
- $Id: /my/pep/Email-Address/trunk/lib/Email/Address.pm 28825 2006-12-05T03:37:00.218738Z rjbs  $
+ $Id: /my/pep/Email-Address/trunk/lib/Email/Address.pm 30803 2007-03-01T01:04:47.157694Z rjbs  $
 
 =head1 DESCRIPTION
 
@@ -394,13 +394,27 @@ sub _format {
         return $self->[_ADDRESS];
     }
 
-    (my $phrase = $self->[_PHRASE]) =~ s/\"/\\"/g;
-    my $format = sprintf q{"%s" <%s> %s},
-                 $phrase, $self->[_ADDRESS], $self->[_COMMENT];
+    my $format = sprintf q{%s <%s> %s},
+                 $self->_enquoted_phrase, $self->[_ADDRESS], $self->[_COMMENT];
+
     $format =~ s/^\s+//;
     $format =~ s/\s+$//;
 
     return $format;
+}
+
+sub _enquoted_phrase {
+  my ($self) = @_;
+
+  my $phrase = $self->[_PHRASE];
+
+  # if it's encoded -- rjbs, 2007-02-28
+  return $phrase if $phrase =~ /\A=\?.+\?=\z/;
+
+  $phrase =~ s/\A"(.+)"\z/$1/;
+  $phrase =~ s/\"/\\"/g;
+
+  return qq{"$phrase"};
 }
 
 =pod
@@ -507,8 +521,8 @@ On his 1.8GHz Apple MacBook, rjbs gets these results:
   Email::Address 8.53/s           232%             --
 
 ...unfortunately, a known bug causes a loss of speed the string to parse has
-certain known characteristics, and disabling cache to avoid caching problems
-will also degrade performance.
+certain known characteristics, and disabling cache will also degrade
+performance.
 
 =head1 PERL EMAIL PROJECT
 
@@ -522,13 +536,19 @@ L<Email::Simple>, L<perl>.
 
 =head1 AUTHOR
 
-Casey West, <F<casey@geeknest.com>>.
+Originally by Casey West, <F<casey@geeknest.com>>.
+
+Maintained, 2006-2007, Ricardo SIGNES <F<rjbs@cpan.org>>.
+
+=head1 ACKNOWLEDGEMENTS
+
+Thanks to Kevin Riggle and Tatsuhiko Miyagawa for tests for annoying phrase-quoting bugs!
 
 =head1 COPYRIGHT
 
-  Copyright (c) 2004 Casey West.  All rights reserved.  This module is free
-  software; you can redistribute it and/or modify it under the same terms as
-  Perl itself.
+Copyright (c) 2004 Casey West.  All rights reserved.  This module is free
+software; you can redistribute it and/or modify it under the same terms as Perl
+itself.
 
 =cut
 

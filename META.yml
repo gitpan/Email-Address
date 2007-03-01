@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                Email-Address
-version:             1.884
+version:             1.885
 abstract:            RFC 2822 Address Parsing
 license:             perl
 generated_by:        ExtUtils::MakeMaker version 6.31
