@@ -9,7 +9,7 @@ use vars qw[$VERSION $COMMENT_NEST_LEVEL $STRINGIFY
 
 my $NOCACHE;
 
-$VERSION              = '1.886';
+$VERSION              = '1.887';
 $COMMENT_NEST_LEVEL ||= 2;
 $STRINGIFY          ||= 'format';
 
@@ -30,7 +30,7 @@ Email::Address - RFC 2822 Address Parsing and Creation
 
 version 1.886
 
- $Id: /my/pep/Email-Address/trunk/lib/Email/Address.pm 30809 2007-03-01T20:16:22.969224Z rjbs  $
+ $Id: /my/pep/Email-Address/trunk/lib/Email/Address.pm 31258 2007-04-01T19:10:18.648910Z rjbs  $
 
 =head1 DESCRIPTION
 
