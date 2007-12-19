@@ -10,7 +10,7 @@ use vars qw[$VERSION $COMMENT_NEST_LEVEL $STRINGIFY
 
 my $NOCACHE;
 
-$VERSION              = '1.888';
+$VERSION              = '1.889';
 $COMMENT_NEST_LEVEL ||= 2;
 $STRINGIFY          ||= 'format';
 $COLLAPSE_SPACES      = 1 unless defined $COLLAPSE_SPACES; # who wants //=? me!
@@ -32,7 +32,7 @@ Email::Address - RFC 2822 Address Parsing and Creation
 
 version 1.886
 
- $Id: /my/pep/Email-Address/trunk/lib/Email/Address.pm 31900 2007-06-23T01:25:34.344997Z rjbs  $
+ $Id: Address.pm 881 2007-12-19 22:08:35Z rjbs@cpan.org $
 
 =head1 DESCRIPTION
 
@@ -253,7 +253,12 @@ The original string should only really be set using C<parse>.
 
 =cut
 
-sub new { bless [@_[1..4]], $_[0] }
+sub new {
+  my ($class, $phrase, $email, $comment, $orig) = @_;
+  $phrase =~ s/\A"(.+)"\z/$1/ if $phrase;
+
+  bless [ $phrase, $email, $comment, $orig ] => $class;
+}
 
 =pod
 
