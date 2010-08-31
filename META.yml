@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Email-Address
-version:            1.890
+version:            1.891
 abstract:           RFC 2822 Address Parsing
 author:
     - Casey West <casey@geeknest.com>

@@ -7,7 +7,7 @@ my %PARSE_CACHE;
 my %FORMAT_CACHE;
 my %NAME_CACHE;
 
-our $VERSION              = '1.890';
+our $VERSION              = '1.891';
 our $COMMENT_NEST_LEVEL ||= 2;
 our $STRINGIFY          ||= 'format';
 our $COLLAPSE_SPACES      = 1 unless defined $COLLAPSE_SPACES; # who wants //=? me!
@@ -27,7 +27,7 @@ Email::Address - RFC 2822 Address Parsing and Creation
 
 =head1 VERSION
 
-version 1.890
+version 1.891
 
 =head1 DESCRIPTION
 
@@ -136,7 +136,7 @@ our $angle_addr = qr/$cfws*<$addr_spec>$cfws*/;
 our $name_addr  = qr/$display_name?$angle_addr/;
 our $mailbox    = qr/(?:$name_addr|$addr_spec)/;
 
-our $addr_spec_CRE  = qr/(?|($local_part)\@($domain)|($local_part)())/;
+our $addr_spec_CRE  = qr/(?:($local_part)\@($domain)|($local_part))/;
 our $angle_addr_CRE = qr/$cfws*<$addr_spec_CRE>$cfws*/;
 our $name_addr_CRE  = qr/($display_name)?$angle_addr_CRE/;
 
@@ -240,12 +240,12 @@ sub __parse {
 
       if (/\A$addr_spec_CRE\z/o) {
         $phrase     = '';
-        $local_part = $1;
-        $domain     = $2;
+        $local_part = defined $1 ? $1 : $3;
+        $domain     = defined $2 ? $2 : "";
       } elsif (/\A$name_addr_CRE\z/o) {
         $phrase     = defined $1 ? $1 : '';
-        $local_part = $2;
-        $domain     = $3;
+        $local_part = defined $2 ? $2 : $4;
+        $domain     = defined $3 ? $3 : "";
       } else {
         die "can't decypher $_";
       }
