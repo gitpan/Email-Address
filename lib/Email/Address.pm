@@ -10,7 +10,7 @@ use vars qw[$VERSION $COMMENT_NEST_LEVEL $STRINGIFY
 
 my $NOCACHE;
 
-$VERSION              = '1.892';
+$VERSION              = '1.893';
 $COMMENT_NEST_LEVEL ||= 2;
 $STRINGIFY          ||= 'format';
 $COLLAPSE_SPACES      = 1 unless defined $COLLAPSE_SPACES; # who wants //=? me!
@@ -30,7 +30,7 @@ Email::Address - RFC 2822 Address Parsing and Creation
 
 =head1 VERSION
 
-version 1.892
+version 1.893
 
 =head1 DESCRIPTION
 
@@ -120,12 +120,12 @@ brackets.
 =item $Email::Address::name_addr
 
 This regular expression defines what an email address can look like
-with an optional preceeding display name, also known as the C<phrase>.
+with an optional preceding display name, also known as the C<phrase>.
 
 =item $Email::Address::mailbox
 
 This is the complete regular expression defining an RFC 2822 emial
-address with an optional preceeding display name and optional
+address with an optional preceding display name and optional
 following comment.
 
 =back
@@ -165,13 +165,17 @@ more.
 
   $Email::Address::COMMENT_NEST_LEVEL = 10; # I'm deep
 
-The reason for this hardly limiting limitation is simple: efficiency.
+The reason for this hardly-limiting limitation is simple: efficiency.
 
 Long strings of whitespace can be problematic for this module to parse, a bug
 which has not yet been adequately addressed.  The default behavior is now to
 collapse multiple spaces into a single space, which avoids this problem.  To
 prevent this behavior, set C<$Email::Address::COLLAPSE_SPACES> to zero.  This
 variable will go away when the bug is resolved properly.
+
+Please note that this module expects C<B<ASCII>> strings to parse, in
+accordance with RFC 822 and its descendants.  Any non-ASCII input at all will
+cause the parser to return no results.
 
 =cut
 
@@ -181,12 +185,12 @@ sub __get_cached_parse {
     my ($class, $line) = @_;
 
     return @{$PARSE_CACHE{$line}} if exists $PARSE_CACHE{$line};
-    return; 
+    return;
 }
 
 sub __cache_parse {
     return if $NOCACHE;
-    
+
     my ($class, $line, $addrs) = @_;
 
     $PARSE_CACHE{$line} = $addrs;
@@ -195,6 +199,8 @@ sub __cache_parse {
 sub parse {
     my ($class, $line) = @_;
     return unless $line;
+
+    return if $line =~ /\P{ASCII}/;
 
     $line =~ s/[ \t]+/ /g if $COLLAPSE_SPACES;
 
@@ -285,7 +291,9 @@ sub purge_cache {
 
   Email::Address->disable_cache if memory_low();
 
-If you'd rather not cache address parses at all, you can disable (and reenable) the Email::Address cache with these methods.  The cache is enabled by default.
+If you'd rather not cache address parses at all, you can disable (and
+re-enable) the Email::Address cache with these methods.  The cache is enabled
+by default.
 
 =cut
 
@@ -364,7 +372,7 @@ BEGIN {
       if ($_[1]) {
         if ($_[0][_IN_CACHE]) {
           my $replicant = bless [ @{$_[0]} ] => ref $_[0];
-          $PARSE_CACHE{ ${ $_[0][_IN_CACHE][0] } }[ $_[0][_IN_CACHE][1] ] 
+          $PARSE_CACHE{ ${ $_[0][_IN_CACHE][0] } }[ $_[0][_IN_CACHE][1] ]
             = $replicant;
           $_[0][_IN_CACHE] = undef;
         }
@@ -518,7 +526,7 @@ __END__
 
 On his 1.8GHz Apple MacBook, rjbs gets these results:
 
-  $ perl -Ilib bench/ea-vs-ma.pl bench/corpus.txt 5 
+  $ perl -Ilib bench/ea-vs-ma.pl bench/corpus.txt 5
                    Rate  Mail::Address Email::Address
   Mail::Address  2.59/s             --           -44%
   Email::Address 4.59/s            77%             --
