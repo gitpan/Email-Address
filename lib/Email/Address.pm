@@ -10,7 +10,7 @@ use vars qw[$VERSION $COMMENT_NEST_LEVEL $STRINGIFY
 
 my $NOCACHE;
 
-$VERSION              = '1.893';
+$VERSION              = '1.894';
 $COMMENT_NEST_LEVEL ||= 2;
 $STRINGIFY          ||= 'format';
 $COLLAPSE_SPACES      = 1 unless defined $COLLAPSE_SPACES; # who wants //=? me!
@@ -30,7 +30,7 @@ Email::Address - RFC 2822 Address Parsing and Creation
 
 =head1 VERSION
 
-version 1.893
+version 1.894
 
 =head1 DESCRIPTION
 
@@ -93,6 +93,13 @@ my $domain         = qr/$dot_atom|$domain_literal/;
 my $display_name   = $phrase;
 
 =head2 Package Variables
+
+B<ACHTUNG!>  Email isn't easy (if even possible) to parse with a regex, I<at
+least> if you're on a C<perl> prior to 5.10.0.  Providing regular expressions
+for use by other programs isn't a great idea, because it makes it hard to
+improve the parser without breaking the "it's a regex" feature.  Using these
+regular expressions is not encouraged, and methods like C<<
+Email::Address->is_addr_spec >> should be provided in the future.
 
 Several regular expressions used in this package are useful to others.
 For convenience, these variables are declared as package variables that
