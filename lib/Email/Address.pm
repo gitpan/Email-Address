@@ -10,7 +10,7 @@ use vars qw[$VERSION $COMMENT_NEST_LEVEL $STRINGIFY
 
 my $NOCACHE;
 
-$VERSION              = '1.894';
+$VERSION              = '1.895';
 $COMMENT_NEST_LEVEL ||= 2;
 $STRINGIFY          ||= 'format';
 $COLLAPSE_SPACES      = 1 unless defined $COLLAPSE_SPACES; # who wants //=? me!
@@ -30,7 +30,7 @@ Email::Address - RFC 2822 Address Parsing and Creation
 
 =head1 VERSION
 
-version 1.894
+version 1.895
 
 =head1 DESCRIPTION
 
@@ -180,8 +180,8 @@ collapse multiple spaces into a single space, which avoids this problem.  To
 prevent this behavior, set C<$Email::Address::COLLAPSE_SPACES> to zero.  This
 variable will go away when the bug is resolved properly.
 
-Please note that this module expects C<B<ASCII>> strings to parse, in
-accordance with RFC 822 and its descendants.  Any non-ASCII input at all will
+In accordance with RFC 822 and its descendants, this module demands that email
+addresses be ASCII only.  Any non-ASCII content in the parsed addresses will
 cause the parser to return no results.
 
 =cut
@@ -207,8 +207,6 @@ sub parse {
     my ($class, $line) = @_;
     return unless $line;
 
-    return if $line =~ /\P{ASCII}/;
-
     $line =~ s/[ \t]+/ /g if $COLLAPSE_SPACES;
 
     if (my @cached = $class->__get_cached_parse($line)) {
@@ -229,6 +227,9 @@ sub parse {
           s/($local_part)\@($domain)//o;
           ($user, $host) = ($1, $2);
       }
+
+      return if $user =~ /\P{ASCII}/;
+      return if $host =~ /\P{ASCII}/;
 
       my ($phrase)       = /($display_name)/o;
 
