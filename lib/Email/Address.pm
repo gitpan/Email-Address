@@ -2,7 +2,7 @@ use strict;
 use warnings;
 package Email::Address;
 {
-  $Email::Address::VERSION = '1.899';
+  $Email::Address::VERSION = '1.900';
 }
 # ABSTRACT: RFC 2822 Address Parsing and Creation
 
@@ -233,6 +233,8 @@ sub _enquoted_phrase {
 
   my $phrase = $self->[_PHRASE];
 
+  return '' unless defined $phrase;
+
   # if it's encoded -- rjbs, 2007-02-28
   return $phrase if $phrase =~ /\A=\?.+\?=\z/;
 
@@ -287,7 +289,7 @@ Email::Address - RFC 2822 Address Parsing and Creation
 
 =head1 VERSION
 
-version 1.899
+version 1.900
 
 =head1 SYNOPSIS
 

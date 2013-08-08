@@ -55,7 +55,7 @@
          "web" : "https://github.com/rjbs/Email-Address"
       }
    },
-   "version" : "1.899",
+   "version" : "1.900",
    "x_Dist_Zilla" : {
       "perl" : {
          "version" : "5.019002"
