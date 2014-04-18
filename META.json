@@ -60,7 +60,7 @@
          "web" : "https://github.com/rjbs/Email-Address"
       }
    },
-   "version" : "1.902",
+   "version" : "1.903",
    "x_Dist_Zilla" : {
       "perl" : {
          "version" : "5.019010"
@@ -413,7 +413,7 @@
                "Dist::Zilla::Plugin::Git::Tag" : {
                   "branch" : null,
                   "signed" : 0,
-                  "tag" : "1.902",
+                  "tag" : "1.903",
                   "tag_format" : "%v",
                   "tag_message" : "v%v",
                   "time_zone" : "local"

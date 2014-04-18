@@ -2,7 +2,7 @@ use strict;
 use warnings;
 package Email::Address;
 # ABSTRACT: RFC 2822 Address Parsing and Creation
-$Email::Address::VERSION = '1.902';
+$Email::Address::VERSION = '1.903';
 our $COMMENT_NEST_LEVEL ||= 2;
 our $STRINGIFY          ||= 'format';
 our $COLLAPSE_SPACES      = 1 unless defined $COLLAPSE_SPACES; # I miss //=
@@ -408,7 +408,7 @@ sub _format {
     }
 
     my $comment = defined $self->[_COMMENT] ? $self->[_COMMENT] : '';
-    $comment = "($comment)" if $comment and $comment !~ /\A\(.*\)\z/;
+    $comment = "($comment)" if length $comment and $comment !~ /\A\(.*\)\z/;
 
     my $format = sprintf q{%s <%s> %s},
                  $self->_enquoted_phrase,
@@ -529,7 +529,7 @@ Email::Address - RFC 2822 Address Parsing and Creation
 
 =head1 VERSION
 
-version 1.902
+version 1.903
 
 =head1 SYNOPSIS
 
