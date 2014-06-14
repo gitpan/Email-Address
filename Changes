@@ -1,5 +1,9 @@
 Release history for Email-Address
 
+1.904     2014-06-14 00:21:21-04:00 America/New_York (TRIAL RELEASE)
+        - avoid being fooled by an addr-like string in the phrase
+        - avoid a slowdown by avoiding backtracking into the phrase
+
 1.903     2014-04-17 21:02:14-04:00 America/New_York
         - correctly parenthesize false comment "0" (sigh)
 

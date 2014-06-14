@@ -2,7 +2,7 @@ use strict;
 use warnings;
 package Email::Address;
 # ABSTRACT: RFC 2822 Address Parsing and Creation
-$Email::Address::VERSION = '1.903';
+$Email::Address::VERSION = '1.904'; # TRIAL
 our $COMMENT_NEST_LEVEL ||= 2;
 our $STRINGIFY          ||= 'format';
 our $COLLAPSE_SPACES      = 1 unless defined $COLLAPSE_SPACES; # I miss //=
@@ -129,7 +129,7 @@ my $display_name   = $phrase;
 
 our $addr_spec  = qr/$local_part\@$domain/;
 our $angle_addr = qr/$cfws*<$addr_spec>$cfws*/;
-our $name_addr  = qr/$display_name?$angle_addr/;
+our $name_addr  = qr/(?>$display_name?)$angle_addr/;
 our $mailbox    = qr/(?:$name_addr|$addr_spec)$comment*/;
 
 sub _PHRASE   () { 0 }
@@ -137,6 +137,15 @@ sub _ADDRESS  () { 1 }
 sub _COMMENT  () { 2 }
 sub _ORIGINAL () { 3 }
 sub _IN_CACHE () { 4 }
+
+sub __dump {
+  return {
+    phrase   => $_[0][_PHRASE],
+    address  => $_[0][_ADDRESS],
+    comment  => $_[0][_COMMENT],
+    original => $_[0][_ORIGINAL],
+  }
+}
 
 #pod =head2 Class Methods
 #pod
@@ -212,7 +221,7 @@ sub parse {
       s/$comment//go if @comments;
 
       my ($user, $host, $com);
-      ($user, $host) = ($1, $2) if s/<($local_part)\@($domain)>//o;
+      ($user, $host) = ($1, $2) if s/<($local_part)\@($domain)>\s*\z//o;
       if (! defined($user) || ! defined($host)) {
           s/($local_part)\@($domain)//o;
           ($user, $host) = ($1, $2);
@@ -529,7 +538,7 @@ Email::Address - RFC 2822 Address Parsing and Creation
 
 =head1 VERSION
 
-version 1.903
+version 1.904
 
 =head1 SYNOPSIS
 

@@ -678,7 +678,7 @@ my @list = (
     '"<advocacy-- ATAT --p.example.org>" <advocacy-- ATAT --p.example.org>',
     [
       [
-        'advocacy',
+        '<advocacy-- ATAT --p.example.org>',
         'advocacy-- ATAT --p.example.org',
         undef
       ]
@@ -1618,7 +1618,17 @@ my @list = (
         undef,
       ],
     ],
-  ]
+  ],
+  [
+    q{"<fake-- ATAT --bogus.biz>" <real-- ATAT --actual.mil>},
+    [
+      [
+        '<fake-- ATAT --bogus.biz>',
+        'real-- ATAT --actual.mil',
+        undef,
+      ],
+    ],
+  ],
 );
 
 my $tests = 1;
