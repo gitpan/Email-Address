@@ -29,7 +29,7 @@ my %WriteMakefileArgs = (
     "Encode::MIME::Header" => 0,
     "Test::More" => "0.96"
   },
-  "VERSION" => "1.904",
+  "VERSION" => "1.905",
   "test" => {
     "TESTS" => "t/*.t"
   }

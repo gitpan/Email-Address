@@ -2,7 +2,7 @@ use strict;
 use warnings;
 package Email::Address;
 # ABSTRACT: RFC 2822 Address Parsing and Creation
-$Email::Address::VERSION = '1.904'; # TRIAL
+$Email::Address::VERSION = '1.905';
 our $COMMENT_NEST_LEVEL ||= 2;
 our $STRINGIFY          ||= 'format';
 our $COLLAPSE_SPACES      = 1 unless defined $COLLAPSE_SPACES; # I miss //=
@@ -51,7 +51,7 @@ my $dot_atom       = qr/$cfws*$dot_atom_text$cfws*/;
 
 my $qtext          = qr/[^\\"]/;
 my $qcontent       = qr/$qtext|$quoted_pair/;
-my $quoted_string  = qr/$cfws*"$qcontent+"$cfws*/;
+my $quoted_string  = qr/$cfws*"$qcontent*"$cfws*/;
 
 my $word           = qr/$atom|$quoted_string/;
 
@@ -538,7 +538,7 @@ Email::Address - RFC 2822 Address Parsing and Creation
 
 =head1 VERSION
 
-version 1.904
+version 1.905
 
 =head1 SYNOPSIS
 
